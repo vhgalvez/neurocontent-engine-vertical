@@ -1,0 +1,78 @@
+# Python
+# =========================
+# Python
+# =========================
+__pycache__/
+*.py[cod]
+*$py.class
+
+# =========================
+# Virtual environments
+# =========================
+venv/
+.venv/
+env/
+.env/
+.env.*
+
+# =========================
+# IDE / Editor
+# =========================
+.vscode/
+.idea/
+
+# =========================
+# Logs
+# =========================
+*.log
+
+# =========================
+# OS files
+# =========================
+.DS_Store
+Thumbs.db
+
+# =========================
+# Python tooling caches
+# =========================
+.cache/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# =========================
+# Jupyter
+# =========================
+.ipynb_checkpoints/
+
+# =========================
+# Legacy outputs
+# =========================
+outputs/audio/
+outputs/subtitles/
+outputs/*.wav
+outputs/*.srt
+outputs/*.mp3
+outputs/*.json
+
+# =========================
+# Generated jobs artifacts
+# =========================
+jobs/*/audio/
+jobs/*/subtitles/
+jobs/*/brief.json
+jobs/*/script.json
+jobs/*/status.json
+jobs/*/visual_manifest.json
+
+# Keep folder structure if needed
+!jobs/.gitkeep
+
+# =========================
+# Optional media artifacts
+# =========================
+*.wav
+*.mp3
+*.flac
+*.srt
+*.vtt

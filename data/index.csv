@@ -1,11 +1,1 @@
 job_id,source_id,estado_csv,idea_central,platform,language,render_targets,default_render_target,content_orientation,brief_created,script_generated,audio_generated,subtitles_generated,visual_manifest_generated,export_ready,last_step,updated_at
-000001,1,pending,trabajar duro no genera riqueza por sí solo,tiktok,es,vertical,vertical,portrait,True,True,True,True,True,True,scene_prompt_pack_generated,2026-03-29T21:09:04+00:00
-000002,2,pending,el error invisible que vacía tu cuenta,reels,es,vertical,vertical,portrait,True,True,True,True,True,True,subtitles_generated,2026-03-29T21:09:04+00:00
-000003,3,pending,la diferencia real no es el ingreso sino la mentalidad,shorts,es,vertical,vertical,portrait,True,True,True,True,True,True,subtitles_generated,2026-03-29T21:09:05+00:00
-000004,4,pending,3 formas reales de generar ingresos hoy,tiktok,es,vertical,vertical,portrait,True,True,True,True,True,True,subtitles_generated,2026-03-29T21:09:05+00:00
-000005,5,pending,"la deuda no es el problema, es tu sistema",reels,es,vertical,vertical,portrait,True,True,True,True,True,True,subtitles_generated,2026-03-29T21:09:05+00:00
-000006,6,pending,"no es guardar, es automatizar",shorts,es,vertical,vertical,portrait,True,True,True,True,True,True,subtitles_generated,2026-03-29T21:09:05+00:00
-000007,7,pending,tu dinero refleja tu mente,tiktok,es,vertical,vertical,portrait,True,True,True,True,True,True,subtitles_generated,2026-03-29T21:09:05+00:00
-000008,8,pending,3 errores que debes evitar,reels,es,vertical,vertical,portrait,True,True,True,True,True,True,subtitles_generated,2026-03-29T21:09:05+00:00
-000009,9,pending,la libertad es una decisión,shorts,es,vertical,vertical,portrait,True,True,True,True,True,True,subtitles_generated,2026-03-29T21:09:05+00:00
-000010,10,pending,puedes empezar con poco,tiktok,es,vertical,vertical,portrait,True,True,True,True,True,True,subtitles_generated,2026-03-29T21:09:05+00:00

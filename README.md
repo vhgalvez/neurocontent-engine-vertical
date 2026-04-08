@@ -693,6 +693,13 @@ Desde la raíz:
 python main.py
 ```
 
+Modo principal actual:
+
+- `python main.py` usa `--source markdown` por defecto y carga historias desde `stories/`
+- cada archivo Markdown debe incluir frontmatter `---` y las secciones `# Titulo`, `## Hook`, `## Historia` y `## CTA`
+- el loader normaliza ese Markdown al schema legacy que sigue consumiendo `director.py`
+- `data/ideas.csv` se mantiene como formato legacy y sigue soportado con `python main.py --source csv`
+
 Con override de dataset:
 
 ```bash

@@ -13,11 +13,11 @@ import requests
 from config import (
     INDEX_FILE,
     JOB_ID_WIDTH,
-    MODEL,
     OLLAMA_MAX_RETRIES,
     OLLAMA_URL,
     OPTIONS,
     REQUEST_TIMEOUT_SECONDS,
+    get_text_model,
     get_runtime_paths,
 )
 from job_paths import JobPaths, build_job_paths, ensure_job_structure, first_existing_path
@@ -563,7 +563,7 @@ def _should_try_rewrite(exc: OllamaError) -> bool:
 
 def _ollama_chat_json(messages: List[Dict[str, str]]) -> Dict[str, Any]:
     payload = {
-        "model": MODEL,
+        "model": get_text_model(),
         "messages": messages,
         "stream": False,
         "format": "json",

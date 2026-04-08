@@ -7,6 +7,7 @@ from config import (
     OVERWRITE_MANIFEST,
     OVERWRITE_SCRIPT,
     configure_runtime,
+    get_text_model,
     get_runtime_paths,
 )
 from story_loader import load_all_stories
@@ -97,6 +98,10 @@ def parse_args() -> argparse.Namespace:
         "--stories-dir",
         default="stories",
         help="Directorio de historias Markdown (por defecto: stories)",
+    )
+    parser.add_argument(
+        "--text-model",
+        help="Override del modelo generador de texto para esta ejecucion.",
     )
     return parser.parse_args()
 
@@ -290,12 +295,17 @@ def build_derived_index(all_briefs: List[Dict[str, Any]]) -> List[Dict[str, Any]
 
 def main() -> None:
     args = parse_args()
-    configure_runtime(dataset_root=args.dataset_root, jobs_root=args.jobs_root)
+    configure_runtime(
+        dataset_root=args.dataset_root,
+        jobs_root=args.jobs_root,
+        text_model=args.text_model,
+    )
     runtime = get_runtime_paths()
 
     print(f"Dataset root: {runtime.dataset_root}")
     print(f"Jobs root: {runtime.jobs_root}")
     print(f"Fuente de historias: {args.source}")
+    print(f"Modelo de texto activo: {get_text_model()}")
 
     if args.source == "markdown":
         all_briefs = load_all_stories(args.stories_dir)

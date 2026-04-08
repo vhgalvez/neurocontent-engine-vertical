@@ -2,6 +2,9 @@ import os
 
 from job_paths import JOB_ID_WIDTH, build_runtime_paths
 
+DEFAULT_TEXT_MODEL = "qwen3:8b"
+TEXT_MODEL_ENV_VAR = "TEXT_MODEL"
+
 BASE_DIR = None
 DATA_DIR = None
 DATASET_ROOT = None
@@ -12,6 +15,7 @@ WSL_DIR = None
 DATA_FILE = None
 INDEX_FILE = None
 _RUNTIME_PATHS = None
+TEXT_MODEL = None
 
 
 def _refresh_runtime_globals() -> None:
@@ -41,6 +45,7 @@ def configure_runtime(
     *,
     dataset_root: str | os.PathLike[str] | None = None,
     jobs_root: str | os.PathLike[str] | None = None,
+    text_model: str | None = None,
 ):
     global _RUNTIME_PATHS
     _RUNTIME_PATHS = build_runtime_paths(
@@ -48,6 +53,7 @@ def configure_runtime(
         jobs_root=jobs_root,
     )
     _refresh_runtime_globals()
+    set_text_model(text_model)
     return _RUNTIME_PATHS
 
 
@@ -62,7 +68,34 @@ def get_runtime_paths():
 get_runtime_paths()
 
 OLLAMA_URL = "http://localhost:11434/api/chat"
-MODEL = "qwen3:8b"
+
+
+def resolve_text_model(candidate: str | None = None) -> str:
+    explicit = str(candidate or "").strip()
+    if explicit:
+        return explicit
+
+    env_value = os.getenv(TEXT_MODEL_ENV_VAR, "").strip()
+    if env_value:
+        return env_value
+
+    return DEFAULT_TEXT_MODEL
+
+
+def set_text_model(candidate: str | None = None) -> str:
+    global TEXT_MODEL
+    TEXT_MODEL = resolve_text_model(candidate)
+    return TEXT_MODEL
+
+
+def get_text_model() -> str:
+    global TEXT_MODEL
+    if TEXT_MODEL is None:
+        TEXT_MODEL = resolve_text_model()
+    return TEXT_MODEL
+
+
+set_text_model()
 
 OPTIONS = {
     "num_ctx": 4096,

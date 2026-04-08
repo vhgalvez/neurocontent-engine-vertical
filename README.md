@@ -699,6 +699,27 @@ Modo principal actual:
 - cada archivo Markdown debe incluir frontmatter `---` y las secciones `# Titulo`, `## Hook`, `## Historia` y `## CTA`
 - el loader normaliza ese Markdown al schema legacy que sigue consumiendo `director.py`
 - `data/ideas.csv` se mantiene como formato legacy y sigue soportado con `python main.py --source csv`
+- el pipeline imprime `Modelo de texto activo: ...` al arrancar para dejar trazabilidad del modelo efectivo
+
+Configuración del modelo de texto:
+
+- opción A, fija en código: edita `DEFAULT_TEXT_MODEL` en `config.py`
+- opción B, variable de entorno: `TEXT_MODEL=qwen2.5:7b python main.py`
+- opción C, override por CLI: `python main.py --text-model qwen2.5:7b`
+- precedencia efectiva: `--text-model` > `TEXT_MODEL` > `DEFAULT_TEXT_MODEL`
+- helper central: `config.get_text_model()` resuelve el modelo efectivo y es la única fuente de verdad para `director.py`
+
+Verificación rápida:
+
+```bash
+python main.py --job-id 000001
+```
+
+Debes ver al inicio una línea como:
+
+```text
+Modelo de texto activo: qwen3:8b
+```
 
 Con override de dataset:
 
@@ -710,6 +731,12 @@ Solo un job:
 
 ```bash
 python main.py --job-id 000001
+```
+
+Con override puntual de modelo:
+
+```bash
+python main.py --job-id 000001 --text-model qwen2.5:7b
 ```
 
 ### Audio VoiceDesign

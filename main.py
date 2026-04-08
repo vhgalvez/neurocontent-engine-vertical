@@ -9,6 +9,7 @@ from config import (
     configure_runtime,
     get_runtime_paths,
 )
+from story_loader import load_all_stories
 from director import (
     OllamaError,
     build_index_row,
@@ -86,6 +87,17 @@ def parse_args() -> argparse.Namespace:
         dest="job_ids",
         help="Procesa solo los jobs indicados. Repetible.",
     )
+    parser.add_argument(
+        "--source",
+        choices=["markdown", "csv"],
+        default="markdown",
+        help="Fuente principal de historias: markdown (por defecto) o csv (legacy)",
+    )
+    parser.add_argument(
+        "--stories-dir",
+        default="stories",
+        help="Directorio de historias Markdown (por defecto: stories)",
+    )
     return parser.parse_args()
 
 
@@ -109,22 +121,18 @@ def _validate_headers(fieldnames: List[str] | None) -> None:
         raise ValueError(f"Faltan columnas obligatorias en {DATA_FILE}: {missing_text}")
 
 
-def load_briefs() -> List[Dict[str, Any]]:
+def load_briefs_csv() -> List[Dict[str, Any]]:
     if not DATA_FILE.exists():
         raise FileNotFoundError(
             f"No existe el archivo de briefs: {DATA_FILE}. "
             "Crea data\\ideas.csv antes de ejecutar python main.py."
         )
-
     briefs: List[Dict[str, Any]] = []
-
     with DATA_FILE.open("r", encoding="utf-8-sig", newline="") as file:
         reader = csv.DictReader(file)
         _validate_headers(reader.fieldnames)
-
         for row in reader:
             briefs.append(_clean_row(row))
-
     return briefs
 
 
@@ -287,33 +295,50 @@ def main() -> None:
 
     print(f"Dataset root: {runtime.dataset_root}")
     print(f"Jobs root: {runtime.jobs_root}")
-    print("Cargando briefs pendientes...")
+    print(f"Fuente de historias: {args.source}")
 
-    all_briefs = load_briefs()
+    if args.source == "markdown":
+        all_briefs = load_all_stories(args.stories_dir)
+    else:
+        all_briefs = load_briefs_csv()
+
     selected_job_ids = {pad_job_id(job_id) for job_id in args.job_ids or []}
-    briefs = [brief for brief in all_briefs if brief.get("estado", "").lower() == "pending"]
+    briefs = [brief for brief in all_briefs if brief.get("metadata", {}).get("estado", brief.get("estado", "")).lower() == "pending"]
     if selected_job_ids:
-        briefs = [brief for brief in briefs if pad_job_id(brief.get("id")) in selected_job_ids]
+        briefs = [brief for brief in briefs if pad_job_id(brief.get("metadata", {}).get("id", brief.get("id"))) in selected_job_ids]
 
     if not briefs:
         print("No hay briefs pendientes. Reconstruyendo solo data/index.csv como indice derivado.")
-        write_index(build_derived_index(all_briefs))
+        if args.source == "csv":
+            write_index(build_derived_index(all_briefs))
+        else:
+            print("(Modo Markdown: índice derivado no implementado aún)")
         return
 
     for position, brief in enumerate(briefs, start=1):
-        title = brief.get("idea_central", f"brief_{position}")
+        # Normalizar acceso a campos para Markdown o CSV
+        meta = brief.get("metadata", brief)
+        title = meta.get("idea_central", meta.get("title", f"brief_{position}"))
         print(f"[{position}/{len(briefs)}] Procesando: {title}")
 
+        # Adaptar brief para el pipeline (debe ser un dict plano)
+        pipeline_brief = dict(meta)
+        # Añadir campos de cuerpo si existen (Markdown)
+        for k in ("title", "hook", "historia", "cta", "visual_notes", "prohibido"):
+            if k in brief:
+                pipeline_brief[k] = brief[k]
+
         try:
-            process_brief(brief)
+            process_brief(pipeline_brief)
         except OllamaError as exc:
             print(f"ERROR Ollama: {exc}")
-            build_error_index_row(brief, str(exc))
+            build_error_index_row(pipeline_brief, str(exc))
         except Exception as exc:
             print(f"ERROR inesperado: {exc}")
-            build_error_index_row(brief, f"Error inesperado: {exc}")
+            build_error_index_row(pipeline_brief, f"Error inesperado: {exc}")
 
-    write_index(build_derived_index(all_briefs))
+    if args.source == "csv":
+        write_index(build_derived_index(all_briefs))
     print("Pipeline editorial completado.")
 
 

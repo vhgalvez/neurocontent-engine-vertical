@@ -370,9 +370,12 @@ def ensure_job_metadata(paths: JobPaths, brief: Dict[str, Any]) -> Dict[str, Any
             "job_schema_version": "2.0",
             "story_id": story_id,
             "story_file": story_file,
+            "story_path": story_file,
+            "status": document.get("status", "created"),
             "title": brief.get("idea_central", ""),
             "language": brief.get("idioma", ""),
             "platform": brief.get("plataforma", ""),
+            "dataset_name": runtime.dataset_name,
             "render": {
                 "targets": render_config["targets"],
                 "default_target": render_config["default_target"],
@@ -398,6 +401,12 @@ def ensure_job_metadata(paths: JobPaths, brief: Dict[str, Any]) -> Dict[str, Any
     if not document.get("created_at"):
         document["created_at"] = now_iso()
     document.setdefault("artifacts", {})
+    return save_job_document(paths, document)
+
+
+def update_job_manifest_status(paths: JobPaths, job_status: str) -> Dict[str, Any]:
+    document = load_job_document(paths)
+    document["status"] = str(job_status).strip()
     return save_job_document(paths, document)
 
 

@@ -78,7 +78,15 @@ class RuntimePaths:
     index_file: Path
     wsl_dir: Path
     dataset_root: Path
+    dataset_name: str
+    stories_root: Path
+    stories_draft_dir: Path
+    stories_production_dir: Path
+    stories_archive_dir: Path
     jobs_root: Path
+    outputs_root: Path
+    logs_root: Path
+    state_root: Path
     voices_root: Path
     voices_index_file: Path
     legacy_jobs_root: Path
@@ -164,6 +172,7 @@ def build_runtime_paths(
 
     resolved_dataset_root = normalize_cross_platform_path(
         dataset_root
+        or os.getenv("DATASET_ROOT")
         or os.getenv("VIDEO_DATASET_ROOT")
         or DEFAULT_VIDEO_DATASET_ROOT
     )
@@ -179,6 +188,7 @@ def build_runtime_paths(
         raise ValueError("No se pudo resolver VIDEO_JOBS_ROOT.")
 
     voices_root = resolved_dataset_root / "voices"
+    stories_root = resolved_dataset_root / "stories"
 
     return RuntimePaths(
         base_dir=base_dir,
@@ -187,7 +197,15 @@ def build_runtime_paths(
         index_file=data_dir / "index.csv",
         wsl_dir=base_dir / "wsl",
         dataset_root=resolved_dataset_root,
+        dataset_name=resolved_dataset_root.name,
+        stories_root=stories_root,
+        stories_draft_dir=stories_root / "draft",
+        stories_production_dir=stories_root / "production",
+        stories_archive_dir=stories_root / "archive",
         jobs_root=resolved_jobs_root,
+        outputs_root=resolved_dataset_root / "outputs",
+        logs_root=resolved_dataset_root / "logs",
+        state_root=resolved_dataset_root / "state",
         voices_root=voices_root,
         voices_index_file=voices_root / "voices_index.json",
         legacy_jobs_root=base_dir / "jobs",
@@ -230,3 +248,16 @@ def ensure_job_structure(job_paths: JobPaths) -> JobPaths:
     job_paths.subtitles_dir.mkdir(parents=True, exist_ok=True)
     job_paths.logs_dir.mkdir(parents=True, exist_ok=True)
     return job_paths
+
+
+def ensure_dataset_structure(runtime: RuntimePaths) -> RuntimePaths:
+    runtime.stories_root.mkdir(parents=True, exist_ok=True)
+    runtime.stories_draft_dir.mkdir(parents=True, exist_ok=True)
+    runtime.stories_production_dir.mkdir(parents=True, exist_ok=True)
+    runtime.stories_archive_dir.mkdir(parents=True, exist_ok=True)
+    runtime.jobs_root.mkdir(parents=True, exist_ok=True)
+    runtime.outputs_root.mkdir(parents=True, exist_ok=True)
+    runtime.logs_root.mkdir(parents=True, exist_ok=True)
+    runtime.state_root.mkdir(parents=True, exist_ok=True)
+    runtime.voices_root.mkdir(parents=True, exist_ok=True)
+    return runtime

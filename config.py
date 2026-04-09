@@ -8,7 +8,15 @@ TEXT_MODEL_ENV_VAR = "TEXT_MODEL"
 BASE_DIR = None
 DATA_DIR = None
 DATASET_ROOT = None
+DATASET_NAME = None
+STORIES_DIR = None
+STORIES_DRAFT_DIR = None
+STORIES_PRODUCTION_DIR = None
+STORIES_ARCHIVE_DIR = None
 JOBS_DIR = None
+OUTPUTS_DIR = None
+LOGS_DIR = None
+STATE_DIR = None
 VOICES_DIR = None
 VOICES_INDEX_FILE = None
 WSL_DIR = None
@@ -22,7 +30,15 @@ def _refresh_runtime_globals() -> None:
     global BASE_DIR
     global DATA_DIR
     global DATASET_ROOT
+    global DATASET_NAME
+    global STORIES_DIR
+    global STORIES_DRAFT_DIR
+    global STORIES_PRODUCTION_DIR
+    global STORIES_ARCHIVE_DIR
     global JOBS_DIR
+    global OUTPUTS_DIR
+    global LOGS_DIR
+    global STATE_DIR
     global VOICES_DIR
     global VOICES_INDEX_FILE
     global WSL_DIR
@@ -33,7 +49,15 @@ def _refresh_runtime_globals() -> None:
     BASE_DIR = runtime.base_dir
     DATA_DIR = runtime.data_dir
     DATASET_ROOT = runtime.dataset_root
+    DATASET_NAME = runtime.dataset_name
+    STORIES_DIR = runtime.stories_root
+    STORIES_DRAFT_DIR = runtime.stories_draft_dir
+    STORIES_PRODUCTION_DIR = runtime.stories_production_dir
+    STORIES_ARCHIVE_DIR = runtime.stories_archive_dir
     JOBS_DIR = runtime.jobs_root
+    OUTPUTS_DIR = runtime.outputs_root
+    LOGS_DIR = runtime.logs_root
+    STATE_DIR = runtime.state_root
     VOICES_DIR = runtime.voices_root
     VOICES_INDEX_FILE = runtime.voices_index_file
     WSL_DIR = runtime.wsl_dir

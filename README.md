@@ -697,12 +697,17 @@ Modo principal actual:
 
 - `python main.py` usa `--source markdown` por defecto y carga historias desde `stories/production/`
 - `stories/archive/` queda fuera del flujo editorial normal porque no se escanea por defecto
+- el dataset operativo vive bajo una raíz configurable y usa esta estructura base:
+  `stories/draft`, `stories/production`, `stories/archive`, `jobs`, `outputs`, `logs`, `state`
 - cada archivo Markdown debe incluir frontmatter `---` y las secciones `# Titulo`, `## Hook`, `## Historia` y `## CTA`
+- `estado` debe ser uno de: `draft`, `pending`, `processing`, `done`, `archived`, `error`
+- el pipeline solo procesa historias con `estado: pending`
 - el loader normaliza ese Markdown al schema legacy que sigue consumiendo `director.py`
 - `data/ideas.csv` se mantiene como formato legacy y sigue soportado con `python main.py --source csv`
 - el pipeline imprime `Modelo de texto activo: ...` al arrancar para dejar trazabilidad del modelo efectivo
 - cada historia mantiene un `story_id` estable, pero cada ejecución genera un `job_id` nuevo con formato `0004_YYYYMMDD_HHMMSS`
 - los outputs nuevos viven en carpetas únicas por ejecución dentro de `video-dataset/jobs/<job_id>/`
+- cuando una historia termina bien, se mueve automáticamente de `stories/production/` a `stories/archive/` con `estado: archived`
 
 Configuración del modelo de texto:
 
@@ -715,7 +720,7 @@ Configuración del modelo de texto:
 Verificación rápida:
 
 ```bash
-python main.py --job-id 000001
+python main.py --story-id 0001 --dry-run
 ```
 
 Debes ver al inicio una línea como:
@@ -730,34 +735,47 @@ Con override de dataset:
 python main.py --dataset-root /mnt/c/Users/vhgal/Documents/desarrollo/ia/AI-video-automation/video-dataset
 ```
 
-Solo un job:
+Solo una historia:
 
 ```bash
-python main.py --job-id 000001
+python main.py --story-id 0001
 ```
 
 Con override puntual de modelo:
 
 ```bash
-python main.py --job-id 000001 --text-model qwen2.5:7b
+python main.py --story-id 0001 --text-model qwen2.5:7b
+```
+
+Dry run:
+
+```bash
+python main.py --dry-run
+```
+
+Reset controlado de dataset:
+
+```bash
+python reset_dataset.py --dataset-root /mnt/c/ruta/a/mi-dataset --dry-run
+python reset_dataset.py --dataset-root /mnt/c/ruta/a/mi-dataset --yes
 ```
 
 ### Audio VoiceDesign
 
 ```bash
-bash wsl/run_audio.sh --job-id 000001
+bash wsl/run_audio.sh --job-id 0001_20260409_101530
 ```
 
 Con selección manual de voz:
 
 ```bash
-bash wsl/run_audio.sh --job-id 000001 --voice-id voice_global_0001 --overwrite
+bash wsl/run_audio.sh --job-id 0001_20260409_101530 --voice-id voice_global_0001 --overwrite
 ```
 
 Con trazabilidad ampliada:
 
 ```bash
-bash wsl/run_audio.sh --job-id 000001 --overwrite --verbose-voice-debug
+bash wsl/run_audio.sh --job-id 0001_20260409_101530 --overwrite --verbose-voice-debug
 ```
 
 ### Diseñar y registrar voz

@@ -2,6 +2,8 @@ from pathlib import Path
 from typing import Any
 
 FRONTMATTER_DELIM = "---"
+VALID_STORY_STATES = {"draft", "pending", "processing", "done", "archived", "error"}
+DATASET_STORY_BUCKETS = ("draft", "production", "archive")
 
 REQUIRED_METADATA_FIELDS = (
     "id",
@@ -129,6 +131,18 @@ def _normalize_story_id(raw_id: Any, *, path_label: str) -> str:
     return normalized_id
 
 
+def _normalize_story_state(raw_state: Any, *, path_label: str) -> str:
+    normalized_state = _normalize_value(raw_state).lower()
+    if not normalized_state:
+        raise ValueError(f"{path_label}: el campo 'estado' no puede estar vacio")
+    if normalized_state not in VALID_STORY_STATES:
+        allowed = ", ".join(sorted(VALID_STORY_STATES))
+        raise ValueError(
+            f"{path_label}: estado invalido '{normalized_state}'. Estados soportados: {allowed}"
+        )
+    return normalized_state
+
+
 def validate_story_metadata(metadata: dict[str, str], story_path: str | Path) -> dict[str, str]:
     path = Path(story_path)
     path_label = str(path)
@@ -137,6 +151,7 @@ def validate_story_metadata(metadata: dict[str, str], story_path: str | Path) ->
 
     validated = dict(metadata)
     validated["id"] = _normalize_story_id(validated.get("id"), path_label=path_label)
+    validated["estado"] = _normalize_story_state(validated.get("estado"), path_label=path_label)
 
     file_stem = path.stem.strip()
     if file_stem and file_stem != validated["id"]:
@@ -153,7 +168,10 @@ def validate_story_metadata(metadata: dict[str, str], story_path: str | Path) ->
 def _validate_required_sections(sections: dict[str, str], path_label: str) -> None:
     missing = [section for section in REQUIRED_BODY_SECTIONS if not _normalize_value(sections.get(section))]
     if missing:
-        pretty_missing = ", ".join(f"## {section.title()}" if section != "title" else "# Titulo" for section in missing)
+        pretty_missing = ", ".join(
+            f"## {section.title()}" if section != "title" else "# Titulo"
+            for section in missing
+        )
         raise ValueError(
             f"{path_label}: faltan secciones obligatorias o estan vacias: {pretty_missing}"
         )
@@ -173,7 +191,8 @@ def _normalize_story_metadata(metadata: dict[str, str], sections: dict[str, str]
         metadata.get("target_aspect_ratio") or metadata.get("aspect_ratio") or "9:16"
     )
     normalized["content_orientation"] = _normalize_value(
-        metadata.get("content_orientation") or (
+        metadata.get("content_orientation")
+        or (
             "multi"
             if "|" in normalized["render_targets"]
             else "landscape"
@@ -220,7 +239,9 @@ def parse_story_markdown(content: str, *, path_label: str = "<memory>") -> dict[
         "historia": _normalize_value(sections.get("historia")),
         "cta": _normalize_value(sections.get("cta")),
         "visual_notes": _normalize_value(sections.get("visual_notes")),
-        "prohibido": _normalize_value(sections.get("prohibido") or normalized_metadata.get("prohibido")),
+        "prohibido": _normalize_value(
+            sections.get("prohibido") or normalized_metadata.get("prohibido")
+        ),
     }
 
     if not story["historia"]:
@@ -246,12 +267,12 @@ def _raise_duplicate_story_id_error(
     previous_file: Path,
 ) -> None:
     raise ValueError(
-        "ID duplicado en historias Markdown.\n"
+        "ID duplicado en historias Markdown dentro del dataset.\n"
         f"- id duplicado: {duplicate_id}\n"
         f"- archivo actual: {current_file}\n"
         f"- archivo anterior: {previous_file}\n"
-        "Sugerencia: cada archivo en stories/ debe tener un 'id' unico y consistente con su nombre "
-        "(por ejemplo, stories/0002.md -> id: 0002)."
+        "Sugerencia: no reutilices story_id dentro del mismo dataset. "
+        "Crea un id nuevo o elimina/renombra la historia conflictiva."
     )
 
 
@@ -277,3 +298,71 @@ def load_all_stories(directory: str | Path) -> list[dict[str, Any]]:
         stories.append(story)
 
     return stories
+
+
+def validate_dataset_story_index(stories_root: str | Path) -> dict[str, Path]:
+    stories_root_path = Path(stories_root)
+    if not stories_root_path.exists():
+        raise FileNotFoundError(
+            f"No existe el directorio base de historias del dataset: {stories_root_path}"
+        )
+
+    seen_ids: dict[str, Path] = {}
+    for bucket in DATASET_STORY_BUCKETS:
+        bucket_dir = stories_root_path / bucket
+        if not bucket_dir.exists():
+            continue
+        for story_file in sorted(bucket_dir.glob("*.md")):
+            story = load_story_markdown(story_file)
+            story_id = story["metadata"]["id"]
+            previous = seen_ids.get(story_id)
+            if previous is not None:
+                _raise_duplicate_story_id_error(story_id, story_file, previous)
+            seen_ids[story_id] = story_file
+
+    return seen_ids
+
+
+def update_story_markdown_state(story_path: str | Path, new_state: str) -> str:
+    path = Path(story_path)
+    path_label = str(path)
+    normalized_state = _normalize_story_state(new_state, path_label=path_label)
+    lines = path.read_text(encoding="utf-8").splitlines()
+    _, end_idx = _parse_frontmatter(lines, path_label)
+
+    updated = False
+    for index in range(1, end_idx):
+        raw_line = lines[index]
+        if raw_line.strip().lower().startswith("estado:"):
+            lines[index] = f"estado: {normalized_state}"
+            updated = True
+            break
+
+    if not updated:
+        raise ValueError(f"{path_label}: no se encontro el campo 'estado' en el frontmatter")
+
+    return "\n".join(lines).strip() + "\n"
+
+
+def archive_story_file(
+    story_path: str | Path,
+    archive_dir: str | Path,
+    *,
+    archive_state: str = "archived",
+) -> Path:
+    source_path = Path(story_path)
+    destination_dir = Path(archive_dir)
+    destination_path = destination_dir / source_path.name
+
+    if not source_path.exists():
+        raise FileNotFoundError(f"No existe la historia a archivar: {source_path}")
+    if destination_path.exists():
+        raise FileExistsError(
+            f"No se puede archivar {source_path.name} porque ya existe en archive: {destination_path}"
+        )
+
+    destination_dir.mkdir(parents=True, exist_ok=True)
+    archived_content = update_story_markdown_state(source_path, archive_state)
+    destination_path.write_text(archived_content, encoding="utf-8")
+    source_path.unlink()
+    return destination_path

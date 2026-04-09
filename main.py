@@ -12,6 +12,7 @@ from config import (
     get_runtime_paths,
 )
 from story_loader import load_all_stories
+from story_loader import archive_story_file, validate_dataset_story_index
 from director import (
     OllamaError,
     build_index_row,
@@ -24,12 +25,18 @@ from director import (
     safe_write_json,
     sync_status_with_files,
     resolve_render_config,
+    update_job_manifest_status,
     update_status,
     validate_script_data,
     write_index,
 )
-from job_paths import first_existing_path
-from job_paths import build_unique_story_job_id, pad_job_id, pad_story_id
+from job_paths import (
+    build_unique_story_job_id,
+    ensure_dataset_structure,
+    first_existing_path,
+    pad_job_id,
+    pad_story_id,
+)
 
 REQUIRED_COLUMNS = {
     "id",
@@ -87,7 +94,13 @@ def parse_args() -> argparse.Namespace:
         "--job-id",
         action="append",
         dest="job_ids",
-        help="Procesa solo los jobs indicados. Repetible.",
+        help="Alias legacy de --story-id. Filtra historias por story_id. Repetible.",
+    )
+    parser.add_argument(
+        "--story-id",
+        action="append",
+        dest="story_ids",
+        help="Procesa solo las historias indicadas por story_id. Repetible.",
     )
     parser.add_argument(
         "--source",
@@ -97,12 +110,16 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--stories-dir",
-        default="stories/production",
-        help="Directorio de historias Markdown activas (por defecto: stories/production)",
+        help="Override del directorio de historias activas. Por defecto usa dataset/stories/production.",
     )
     parser.add_argument(
         "--text-model",
         help="Override del modelo generador de texto para esta ejecucion.",
+    )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Valida el dataset y muestra que historias procesaria sin ejecutar el pipeline.",
     )
     return parser.parse_args()
 
@@ -230,6 +247,48 @@ def resolve_pipeline_job_id(brief: Dict[str, Any]) -> str:
     return pad_job_id(brief.get("id"))
 
 
+def validate_dataset_runtime(runtime) -> None:
+    if not runtime.dataset_root.exists():
+        raise FileNotFoundError(
+            f"No existe el directorio de dataset configurado: {runtime.dataset_root}"
+        )
+
+
+def resolve_markdown_stories_dir(args: argparse.Namespace, runtime) -> Path:
+    return Path(args.stories_dir) if args.stories_dir else runtime.stories_production_dir
+
+
+def load_markdown_briefs(args: argparse.Namespace, runtime) -> List[Dict[str, Any]]:
+    validate_dataset_story_index(runtime.stories_root)
+    stories_dir = resolve_markdown_stories_dir(args, runtime)
+    return load_all_stories(stories_dir)
+
+
+def select_pending_markdown_briefs(
+    all_briefs: List[Dict[str, Any]],
+    selected_story_ids: set[str],
+) -> List[Dict[str, Any]]:
+    pending_briefs = [
+        brief
+        for brief in all_briefs
+        if brief.get("metadata", {}).get("estado", brief.get("estado", "")).lower() == "pending"
+    ]
+    if selected_story_ids:
+        pending_briefs = [
+            brief
+            for brief in pending_briefs
+            if pad_story_id(brief.get("metadata", {}).get("id", brief.get("id"))) in selected_story_ids
+        ]
+    return pending_briefs
+
+
+def archive_processed_story(brief: Dict[str, Any], runtime) -> Path:
+    story_path = brief.get("story_file")
+    if not story_path:
+        raise ValueError("El brief no contiene story_file para archivar la historia.")
+    return archive_story_file(story_path, runtime.stories_archive_dir, archive_state="archived")
+
+
 def process_brief(brief: Dict[str, Any]) -> Dict[str, Any]:
     job_id = resolve_pipeline_job_id(brief)
     paths = get_job_paths(job_id)
@@ -319,32 +378,51 @@ def main() -> None:
         text_model=args.text_model,
     )
     runtime = get_runtime_paths()
+    validate_dataset_runtime(runtime)
+    ensure_dataset_structure(runtime)
 
     print(f"Dataset root: {runtime.dataset_root}")
+    print(f"Dataset name: {runtime.dataset_name}")
     print(f"Jobs root: {runtime.jobs_root}")
     print(f"Fuente de historias: {args.source}")
     print(f"Modelo de texto activo: {get_text_model()}")
 
     if args.source == "markdown":
-        all_briefs = load_all_stories(args.stories_dir)
+        print(f"Stories production: {resolve_markdown_stories_dir(args, runtime)}")
+        all_briefs = load_markdown_briefs(args, runtime)
     else:
         all_briefs = load_briefs_csv()
 
-    selected_story_ids = {pad_story_id(job_id) for job_id in args.job_ids or []}
-    briefs = [brief for brief in all_briefs if brief.get("metadata", {}).get("estado", brief.get("estado", "")).lower() == "pending"]
-    if selected_story_ids:
-        briefs = [
-            brief
-            for brief in briefs
-            if pad_story_id(brief.get("metadata", {}).get("id", brief.get("id"))) in selected_story_ids
-        ]
+    selected_story_ids = {
+        pad_story_id(story_id)
+        for story_id in [*(args.story_ids or []), *(args.job_ids or [])]
+    }
+    briefs = (
+        select_pending_markdown_briefs(all_briefs, selected_story_ids)
+        if args.source == "markdown"
+        else [brief for brief in all_briefs if brief.get("estado", "").lower() == "pending"]
+    )
 
     if not briefs:
+        if args.source == "markdown":
+            print("No hay historias pending en stories/production para procesar.")
+            return
         print("No hay briefs pendientes. Reconstruyendo solo data/index.csv como indice derivado.")
         if args.source == "csv":
             write_index(build_derived_index(all_briefs))
         else:
             print("(Modo Markdown: índice derivado no implementado aún)")
+        return
+
+    if args.dry_run:
+        print("DRY RUN: historias pending detectadas:")
+        for brief in briefs:
+            meta = brief.get("metadata", brief)
+            story_id = pad_story_id(meta.get("id", brief.get("id")))
+            story_file = brief.get("story_file", "")
+            planned_job_id = build_execution_job_id({"story_id": story_id, "story_file": story_file})
+            print(f"- story_id={story_id} -> job_id={planned_job_id} -> file={story_file}")
+        print("Dry run completado. No se genero ningun job ni se movio ninguna historia.")
         return
 
     for position, brief in enumerate(briefs, start=1):
@@ -368,12 +446,18 @@ def main() -> None:
 
         try:
             process_brief(pipeline_brief)
+            update_job_manifest_status(get_job_paths(pipeline_brief["job_id"]), "done")
+            if args.source == "markdown":
+                archived_path = archive_processed_story(pipeline_brief, runtime)
+                print(f"Historia archivada en: {archived_path}")
         except OllamaError as exc:
             print(f"ERROR Ollama: {exc}")
             build_error_index_row(pipeline_brief, str(exc))
+            update_job_manifest_status(get_job_paths(pipeline_brief["job_id"]), "error")
         except Exception as exc:
             print(f"ERROR inesperado: {exc}")
             build_error_index_row(pipeline_brief, f"Error inesperado: {exc}")
+            update_job_manifest_status(get_job_paths(pipeline_brief["job_id"]), "error")
 
     if args.source == "csv":
         write_index(build_derived_index(all_briefs))

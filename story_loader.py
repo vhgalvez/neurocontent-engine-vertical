@@ -122,6 +122,34 @@ def _validate_required_metadata(metadata: dict[str, str], path_label: str) -> No
         )
 
 
+def _normalize_story_id(raw_id: Any, *, path_label: str) -> str:
+    normalized_id = _normalize_value(raw_id)
+    if not normalized_id:
+        raise ValueError(f"{path_label}: el campo 'id' no puede estar vacio")
+    return normalized_id
+
+
+def validate_story_metadata(metadata: dict[str, str], story_path: str | Path) -> dict[str, str]:
+    path = Path(story_path)
+    path_label = str(path)
+
+    _validate_required_metadata(metadata, path_label)
+
+    validated = dict(metadata)
+    validated["id"] = _normalize_story_id(validated.get("id"), path_label=path_label)
+
+    file_stem = path.stem.strip()
+    if file_stem and file_stem != validated["id"]:
+        raise ValueError(
+            f"{path_label}: el nombre del archivo no coincide con el id interno.\n"
+            f"- nombre de archivo: {file_stem}.md\n"
+            f"- id en frontmatter: {validated['id']}\n"
+            "Sugerencia: renombra el archivo para que coincida con el id o corrige el campo 'id' del frontmatter."
+        )
+
+    return validated
+
+
 def _validate_required_sections(sections: dict[str, str], path_label: str) -> None:
     missing = [section for section in REQUIRED_BODY_SECTIONS if not _normalize_value(sections.get(section))]
     if missing:
@@ -182,9 +210,7 @@ def parse_story_markdown(content: str, *, path_label: str = "<memory>") -> dict[
     body = "\n".join(lines[end_idx + 1 :])
     sections = _parse_sections(body)
 
-    _validate_required_metadata(metadata, path_label)
     _validate_required_sections(sections, path_label)
-
     normalized_metadata = _normalize_story_metadata(metadata, sections)
 
     story = {
@@ -205,9 +231,27 @@ def parse_story_markdown(content: str, *, path_label: str = "<memory>") -> dict[
 
 def load_story_markdown(path: str | Path) -> dict[str, Any]:
     story_path = Path(path)
-    return parse_story_markdown(
+    story = parse_story_markdown(
         story_path.read_text(encoding="utf-8"),
         path_label=str(story_path),
+    )
+    story["metadata"] = validate_story_metadata(story["metadata"], story_path)
+    story["story_file"] = story_path.as_posix()
+    return story
+
+
+def _raise_duplicate_story_id_error(
+    duplicate_id: str,
+    current_file: Path,
+    previous_file: Path,
+) -> None:
+    raise ValueError(
+        "ID duplicado en historias Markdown.\n"
+        f"- id duplicado: {duplicate_id}\n"
+        f"- archivo actual: {current_file}\n"
+        f"- archivo anterior: {previous_file}\n"
+        "Sugerencia: cada archivo en stories/ debe tener un 'id' unico y consistente con su nombre "
+        "(por ejemplo, stories/0002.md -> id: 0002)."
     )
 
 
@@ -228,9 +272,7 @@ def load_all_stories(directory: str | Path) -> list[dict[str, Any]]:
         source_id = story["metadata"]["id"]
         previous = seen_ids.get(source_id)
         if previous is not None:
-            raise ValueError(
-                f"ID duplicado en historias Markdown: {source_id} aparece en {previous} y {story_file}"
-            )
+            _raise_duplicate_story_id_error(source_id, story_file, previous)
         seen_ids[source_id] = story_file
         stories.append(story)
 

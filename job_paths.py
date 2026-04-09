@@ -1,6 +1,7 @@
 import os
 import re
 from dataclasses import dataclass
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Iterable
 
@@ -42,7 +43,31 @@ def pad_job_id(value: object) -> str:
     raw = str(value).strip()
     if not raw:
         raise ValueError("El brief no contiene un id utilizable.")
+    if not raw.isdigit():
+        return raw
     return raw.zfill(JOB_ID_WIDTH)
+
+
+def pad_story_id(value: object) -> str:
+    raw = str(value).strip()
+    if not raw:
+        raise ValueError("La historia no contiene un story_id utilizable.")
+    return raw
+
+
+def build_story_job_id(story_id: object, created_at: datetime | None = None) -> str:
+    normalized_story_id = pad_story_id(story_id)
+    timestamp = (created_at or datetime.now(timezone.utc)).strftime("%Y%m%d_%H%M%S")
+    return f"{normalized_story_id}_{timestamp}"
+
+
+def build_unique_story_job_id(story_id: object, jobs_root: Path) -> str:
+    probe_time = datetime.now(timezone.utc)
+    while True:
+        candidate = build_story_job_id(story_id, created_at=probe_time)
+        if not (jobs_root / candidate).exists():
+            return candidate
+        probe_time += timedelta(seconds=1)
 
 
 @dataclass(frozen=True)

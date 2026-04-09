@@ -1,5 +1,6 @@
 import argparse
 import csv
+from pathlib import Path
 from typing import Any, Dict, List
 
 from config import (
@@ -19,7 +20,6 @@ from director import (
     generate_scene_prompt_pack,
     generate_script,
     get_job_paths,
-    pad_job_id,
     safe_read_json,
     safe_write_json,
     sync_status_with_files,
@@ -29,6 +29,7 @@ from director import (
     write_index,
 )
 from job_paths import first_existing_path
+from job_paths import build_unique_story_job_id, pad_job_id, pad_story_id
 
 REQUIRED_COLUMNS = {
     "id",
@@ -96,8 +97,8 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--stories-dir",
-        default="stories",
-        help="Directorio de historias Markdown (por defecto: stories)",
+        default="stories/production",
+        help="Directorio de historias Markdown activas (por defecto: stories/production)",
     )
     parser.add_argument(
         "--text-model",
@@ -212,8 +213,25 @@ def _load_or_generate_manifest(
     return manifest
 
 
+def build_execution_job_id(brief: Dict[str, Any]) -> str:
+    story_id = str(brief.get("story_id") or brief.get("id") or "").strip()
+    if not story_id:
+        raise ValueError("El brief no contiene story_id o id utilizable.")
+    runtime = get_runtime_paths()
+    return build_unique_story_job_id(story_id, runtime.jobs_root)
+
+
+def resolve_pipeline_job_id(brief: Dict[str, Any]) -> str:
+    explicit_job_id = str(brief.get("job_id") or "").strip()
+    if explicit_job_id:
+        return explicit_job_id
+    if brief.get("story_file") or brief.get("story_id"):
+        return build_execution_job_id(brief)
+    return pad_job_id(brief.get("id"))
+
+
 def process_brief(brief: Dict[str, Any]) -> Dict[str, Any]:
-    job_id = pad_job_id(brief.get("id"))
+    job_id = resolve_pipeline_job_id(brief)
     paths = get_job_paths(job_id)
     render_config = resolve_render_config(brief)
 
@@ -228,7 +246,7 @@ def process_brief(brief: Dict[str, Any]) -> Dict[str, Any]:
         render_horizontal_requested="horizontal" in render_config["targets"],
         render_vertical_ready=False,
         render_horizontal_ready=False,
-        last_step="brief_synced_from_csv",
+        last_step="brief_synced_from_source",
     )
 
     script = _load_or_generate_script(brief, paths)
@@ -240,7 +258,7 @@ def process_brief(brief: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def build_error_index_row(brief: Dict[str, Any], message: str) -> Dict[str, Any]:
-    job_id = pad_job_id(brief.get("id"))
+    job_id = resolve_pipeline_job_id(brief)
     paths = get_job_paths(job_id)
     render_config = resolve_render_config(brief)
 
@@ -312,10 +330,14 @@ def main() -> None:
     else:
         all_briefs = load_briefs_csv()
 
-    selected_job_ids = {pad_job_id(job_id) for job_id in args.job_ids or []}
+    selected_story_ids = {pad_story_id(job_id) for job_id in args.job_ids or []}
     briefs = [brief for brief in all_briefs if brief.get("metadata", {}).get("estado", brief.get("estado", "")).lower() == "pending"]
-    if selected_job_ids:
-        briefs = [brief for brief in briefs if pad_job_id(brief.get("metadata", {}).get("id", brief.get("id"))) in selected_job_ids]
+    if selected_story_ids:
+        briefs = [
+            brief
+            for brief in briefs
+            if pad_story_id(brief.get("metadata", {}).get("id", brief.get("id"))) in selected_story_ids
+        ]
 
     if not briefs:
         print("No hay briefs pendientes. Reconstruyendo solo data/index.csv como indice derivado.")
@@ -333,6 +355,12 @@ def main() -> None:
 
         # Adaptar brief para el pipeline (debe ser un dict plano)
         pipeline_brief = dict(meta)
+        story_id = pad_story_id(meta.get("id", pipeline_brief.get("id")))
+        pipeline_brief["id"] = story_id
+        pipeline_brief["story_id"] = story_id
+        if brief.get("story_file"):
+            pipeline_brief["story_file"] = str(Path(brief["story_file"]).as_posix())
+        pipeline_brief["job_id"] = build_execution_job_id(pipeline_brief)
         # Añadir campos de cuerpo si existen (Markdown)
         for k in ("title", "hook", "historia", "cta", "visual_notes", "prohibido"):
             if k in brief:

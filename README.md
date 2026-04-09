@@ -695,11 +695,14 @@ python main.py
 
 Modo principal actual:
 
-- `python main.py` usa `--source markdown` por defecto y carga historias desde `stories/`
+- `python main.py` usa `--source markdown` por defecto y carga historias desde `stories/production/`
+- `stories/archive/` queda fuera del flujo editorial normal porque no se escanea por defecto
 - cada archivo Markdown debe incluir frontmatter `---` y las secciones `# Titulo`, `## Hook`, `## Historia` y `## CTA`
 - el loader normaliza ese Markdown al schema legacy que sigue consumiendo `director.py`
 - `data/ideas.csv` se mantiene como formato legacy y sigue soportado con `python main.py --source csv`
 - el pipeline imprime `Modelo de texto activo: ...` al arrancar para dejar trazabilidad del modelo efectivo
+- cada historia mantiene un `story_id` estable, pero cada ejecución genera un `job_id` nuevo con formato `0004_YYYYMMDD_HHMMSS`
+- los outputs nuevos viven en carpetas únicas por ejecución dentro de `video-dataset/jobs/<job_id>/`
 
 Configuración del modelo de texto:
 

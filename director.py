@@ -362,10 +362,14 @@ def ensure_job_metadata(paths: JobPaths, brief: Dict[str, Any]) -> Dict[str, Any
     runtime = get_runtime_paths()
     document = load_job_document(paths)
     render_config = resolve_render_config(brief)
+    story_id = str(brief.get("story_id") or brief.get("id") or "").strip()
+    story_file = str(brief.get("story_file", "") or "").strip()
     document.update(
         {
             "job_id": paths.job_id,
             "job_schema_version": "2.0",
+            "story_id": story_id,
+            "story_file": story_file,
             "title": brief.get("idea_central", ""),
             "language": brief.get("idioma", ""),
             "platform": brief.get("plataforma", ""),
@@ -1461,7 +1465,7 @@ def build_index_row(brief: Dict[str, Any], status: Dict[str, Any], job_id: str) 
         render_targets_csv = str(status_render_targets).strip() or render_config["targets_csv"]
     return {
         "job_id": job_id,
-        "source_id": str(brief.get("id", "")).strip(),
+        "source_id": str(brief.get("story_id") or brief.get("id", "")).strip(),
         "estado_csv": brief.get("estado", ""),
         "idea_central": brief.get("idea_central", ""),
         "platform": brief.get("plataforma", ""),

@@ -52,6 +52,7 @@ CONTEXTO DE PLATAFORMA:
 - Plataforma: {plataforma}
 - Formato: {formato}
 - Duracion objetivo: {duracion_seg} segundos
+- Duracion total objetivo del audio: {target_audio_minutes} minutos
 - Idioma: {idioma}
 
 BRIEF:
@@ -106,6 +107,8 @@ INSTRUCCIONES DE ESCRITURA:
 16. No menciones nada prohibido.
 17. Escribe pensando en retencion y ritmo visual.
 18. El texto debe servir luego para dividir escenas visuales con claridad.
+19. Ajusta la narracion para que se lea de forma natural dentro de la duracion total objetivo del audio.
+20. No menciones calculos tecnicos, palabras por minuto ni conteos de palabras.
 
 REGLAS DE CALIDAD:
 - hook maximo 18 palabras
@@ -117,6 +120,7 @@ REGLAS DE CALIDAD:
 - guion_narrado debe tener al menos 4 frases completas
 - guion_narrado debe tener transiciones naturales
 - guion_narrado debe sonar a una sola respiracion editorial
+- guion_narrado debe ajustarse de forma natural a la duracion total objetivo del audio
 - usa verbos concretos
 - evita abstracciones
 - evita cliches
@@ -173,6 +177,7 @@ CONTEXTO:
 - Idea central: {idea_central}
 - Plataforma: {plataforma}
 - Duracion objetivo: {duracion_seg} segundos
+- Duracion total objetivo del audio: {target_audio_minutes} minutos
 - Tono: {tono}
 - Ritmo: {ritmo}
 - Emocion principal: {emocion_principal}
@@ -193,6 +198,7 @@ INSTRUCCIONES:
 8. Mantén el CTA exacto al final.
 9. Minimo 4 frases completas.
 10. Maximo aproximado 185 palabras.
+11. Ajusta la longitud final para que suene natural dentro de la duracion total objetivo del audio.
 
 Devuelve exclusivamente este JSON valido:
 {{

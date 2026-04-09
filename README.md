@@ -717,6 +717,14 @@ Configuración del modelo de texto:
 - precedencia efectiva: `--text-model` > `TEXT_MODEL` > `DEFAULT_TEXT_MODEL`
 - helper central: `config.get_text_model()` resuelve el modelo efectivo y es la única fuente de verdad para `director.py`
 
+Duración objetivo del audio para generación de texto:
+
+- opción A, variable de entorno: `TARGET_AUDIO_MINUTES=2 python main.py`
+- opción B, override por CLI: `python main.py --target-audio-minutes 2`
+- si no defines esta variable, el sistema deriva la duración objetivo desde `duracion_seg` del brief
+- esta duración solo orienta la generación del texto y del `guion_narrado`
+- no cambia la lógica del TTS ni de subtítulos
+
 Verificación rápida:
 
 ```bash
@@ -727,6 +735,7 @@ Debes ver al inicio una línea como:
 
 ```text
 Modelo de texto activo: qwen3:8b
+Duracion objetivo de audio: derivada desde duracion_seg del brief
 ```
 
 Con override de dataset:
@@ -745,6 +754,12 @@ Con override puntual de modelo:
 
 ```bash
 python main.py --story-id 0001 --text-model qwen2.5:7b
+```
+
+Con override puntual de duración objetivo de audio:
+
+```bash
+python main.py --story-id 0001 --target-audio-minutes 2
 ```
 
 Dry run:

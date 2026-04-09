@@ -17,6 +17,7 @@ from config import (
     OLLAMA_URL,
     OPTIONS,
     REQUEST_TIMEOUT_SECONDS,
+    get_target_audio_minutes,
     get_text_model,
     get_runtime_paths,
 )
@@ -486,6 +487,7 @@ def _normalize_brief(brief: Dict[str, Any]) -> Dict[str, str]:
         "default_render_target",
         "content_orientation",
         "target_aspect_ratio",
+        "target_audio_minutes",
     }
 
     normalized: Dict[str, str] = {}
@@ -498,8 +500,26 @@ def _normalize_brief(brief: Dict[str, Any]) -> Dict[str, str]:
     normalized["default_render_target"] = render_config["default_target"]
     normalized["content_orientation"] = render_config["content_orientation"]
     normalized["target_aspect_ratio"] = render_config["aspect_ratios_csv"]
+    normalized["target_audio_minutes"] = f"{_resolve_target_audio_minutes(brief):.2f}"
 
     return normalized
+
+
+def _resolve_target_audio_minutes(brief: Dict[str, Any]) -> float:
+    explicit_target = get_target_audio_minutes()
+    if explicit_target is not None:
+        return explicit_target
+
+    duration_raw = str(brief.get("duracion_seg", "")).strip()
+    if duration_raw:
+        try:
+            duration_seconds = float(duration_raw)
+            if duration_seconds > 0:
+                return duration_seconds / 60.0
+        except ValueError:
+            pass
+
+    return 1.0
 
 
 def _clean_compare_text(text: str) -> str:

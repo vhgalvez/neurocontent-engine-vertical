@@ -4,6 +4,7 @@ from job_paths import JOB_ID_WIDTH, build_runtime_paths
 
 DEFAULT_TEXT_MODEL = "qwen3:8b"
 TEXT_MODEL_ENV_VAR = "TEXT_MODEL"
+TARGET_AUDIO_MINUTES_ENV_VAR = "TARGET_AUDIO_MINUTES"
 
 BASE_DIR = None
 DATA_DIR = None
@@ -24,6 +25,7 @@ DATA_FILE = None
 INDEX_FILE = None
 _RUNTIME_PATHS = None
 TEXT_MODEL = None
+TARGET_AUDIO_MINUTES = None
 
 
 def _refresh_runtime_globals() -> None:
@@ -70,6 +72,7 @@ def configure_runtime(
     dataset_root: str | os.PathLike[str] | None = None,
     jobs_root: str | os.PathLike[str] | None = None,
     text_model: str | None = None,
+    target_audio_minutes: float | None = None,
 ):
     global _RUNTIME_PATHS
     _RUNTIME_PATHS = build_runtime_paths(
@@ -78,6 +81,7 @@ def configure_runtime(
     )
     _refresh_runtime_globals()
     set_text_model(text_model)
+    set_target_audio_minutes(target_audio_minutes)
     return _RUNTIME_PATHS
 
 
@@ -120,6 +124,57 @@ def get_text_model() -> str:
 
 
 set_text_model()
+
+
+def _normalize_target_audio_minutes(candidate: float | str | None) -> float | None:
+    if candidate is None:
+        return None
+
+    raw = str(candidate).strip()
+    if not raw:
+        return None
+
+    try:
+        value = float(raw)
+    except ValueError as exc:
+        raise ValueError(
+            f"TARGET_AUDIO_MINUTES invalido: {candidate}. Debe ser un numero positivo."
+        ) from exc
+
+    if value <= 0:
+        raise ValueError(
+            f"TARGET_AUDIO_MINUTES invalido: {candidate}. Debe ser mayor que cero."
+        )
+
+    return value
+
+
+def resolve_target_audio_minutes(candidate: float | str | None = None) -> float | None:
+    explicit = _normalize_target_audio_minutes(candidate)
+    if explicit is not None:
+        return explicit
+
+    env_value = os.getenv(TARGET_AUDIO_MINUTES_ENV_VAR, "").strip()
+    if env_value:
+        return _normalize_target_audio_minutes(env_value)
+
+    return None
+
+
+def set_target_audio_minutes(candidate: float | str | None = None) -> float | None:
+    global TARGET_AUDIO_MINUTES
+    TARGET_AUDIO_MINUTES = resolve_target_audio_minutes(candidate)
+    return TARGET_AUDIO_MINUTES
+
+
+def get_target_audio_minutes() -> float | None:
+    global TARGET_AUDIO_MINUTES
+    if TARGET_AUDIO_MINUTES is None:
+        TARGET_AUDIO_MINUTES = resolve_target_audio_minutes()
+    return TARGET_AUDIO_MINUTES
+
+
+set_target_audio_minutes()
 
 OPTIONS = {
     "num_ctx": 4096,

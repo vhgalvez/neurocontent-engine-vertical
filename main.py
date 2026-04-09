@@ -8,6 +8,7 @@ from config import (
     OVERWRITE_MANIFEST,
     OVERWRITE_SCRIPT,
     configure_runtime,
+    get_target_audio_minutes,
     get_text_model,
     get_runtime_paths,
 )
@@ -115,6 +116,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--text-model",
         help="Override del modelo generador de texto para esta ejecucion.",
+    )
+    parser.add_argument(
+        "--target-audio-minutes",
+        type=float,
+        help="Duracion total objetivo del audio en minutos para orientar la generacion de texto.",
     )
     parser.add_argument(
         "--dry-run",
@@ -395,6 +401,7 @@ def main() -> None:
         dataset_root=args.dataset_root,
         jobs_root=args.jobs_root,
         text_model=args.text_model,
+        target_audio_minutes=args.target_audio_minutes,
     )
     runtime = get_runtime_paths()
     validate_dataset_runtime(runtime)
@@ -405,6 +412,12 @@ def main() -> None:
     print(f"Jobs root: {runtime.jobs_root}")
     print(f"Fuente de historias: {args.source}")
     print(f"Modelo de texto activo: {get_text_model()}")
+    print(
+        "Duracion objetivo de audio: "
+        f"{get_target_audio_minutes():.2f} minutos"
+        if get_target_audio_minutes() is not None
+        else "Duracion objetivo de audio: derivada desde duracion_seg del brief"
+    )
 
     if args.source == "markdown":
         print(f"Stories production: {resolve_markdown_stories_dir(args, runtime)}")

@@ -72,24 +72,17 @@ El repo mantiene compatibilidad razonable de lectura con `jobs/<job_id>/` dentro
 ```text
 video-dataset/
 ├── jobs/
-│   └── 000001/
-│       ├── job.json
-│       ├── status.json
-│       ├── source/
-│       │   ├── 000001_brief.json
-│       │   ├── 000001_script.json
-│       │   ├── 000001_visual_manifest.json
-│       │   ├── 000001_scene_prompt_pack.json
-│       │   ├── 000001_scene_prompt_pack.md
-│       │   └── 000001_rendered_comfy_workflow.json
-│       ├── audio/
-│       │   └── 000001_narration.wav
-│       ├── subtitles/
-│       │   └── 000001_narration.srt
-│       └── logs/
-│           ├── 000001_phase_editorial.log
-│           ├── 000001_phase_audio.log
-│           └── 000001_phase_subtitles.log
+│   ├── h1000/
+│   │   ├── h10001_20260409_183500/
+│   │   │   ├── job.json
+│   │   │   ├── status.json
+│   │   │   ├── source/
+│   │   │   ├── audio/
+│   │   │   ├── subtitles/
+│   │   │   └── logs/
+│   │   └── h10001_20260409_191022/
+│   └── h2000/
+│       └── h20001_20260409_210100/
 └── voices/
     ├── voice_global_0001/
     │   ├── voice.json
@@ -99,19 +92,43 @@ video-dataset/
     └── voices_index.json
 ```
 
+## story_id, job_id y story_bucket
+
+- `story_id`: identifica la historia fuente. Ejemplo: `h10001`
+- `job_id`: identifica una ejecución concreta. Ejemplo: `h10001_20260409_183500`
+- `story_bucket`: agrupación física de jobs derivada del `story_id`. Ejemplo: `h1000`
+
+Regla actual del bucket:
+
+- si el `story_id` termina en números, el bucket conserva el mismo prefijo y elimina el último dígito numérico
+- ejemplo: `h10001 -> h1000`
+- ejemplo: `h10002 -> h1000`
+- ejemplo: `h20001 -> h2000`
+
+Ruta final de trabajo:
+
+- `jobs/<story_bucket>/<job_id>/`
+- ejemplo real: `jobs/h1000/h10001_20260409_183500/`
+
+Esto no cambia el modelo conceptual:
+
+- una historia puede seguir teniendo múltiples jobs
+- el `job_id` no cambia de significado
+- el bucket solo ordena físicamente los jobs
+
 ## Naming por `job_id`
 
 Todos los artefactos nuevos del job usan el mismo `job_id` en el nombre:
 
-- `jobs/000001/source/000001_brief.json`
-- `jobs/000001/source/000001_script.json`
-- `jobs/000001/source/000001_visual_manifest.json`
-- `jobs/000001/source/000001_scene_prompt_pack.json`
-- `jobs/000001/source/000001_scene_prompt_pack.md`
-- `jobs/000001/source/000001_rendered_comfy_workflow.json`
-- `jobs/000001/audio/000001_narration.wav`
-- `jobs/000001/subtitles/000001_narration.srt`
-- `jobs/000001/logs/000001_phase_editorial.log`
+- `jobs/h1000/h10001_20260409_183500/source/h10001_20260409_183500_brief.json`
+- `jobs/h1000/h10001_20260409_183500/source/h10001_20260409_183500_script.json`
+- `jobs/h1000/h10001_20260409_183500/source/h10001_20260409_183500_visual_manifest.json`
+- `jobs/h1000/h10001_20260409_183500/source/h10001_20260409_183500_scene_prompt_pack.json`
+- `jobs/h1000/h10001_20260409_183500/source/h10001_20260409_183500_scene_prompt_pack.md`
+- `jobs/h1000/h10001_20260409_183500/source/h10001_20260409_183500_rendered_comfy_workflow.json`
+- `jobs/h1000/h10001_20260409_183500/audio/h10001_20260409_183500_narration.wav`
+- `jobs/h1000/h10001_20260409_183500/subtitles/h10001_20260409_183500_narration.srt`
+- `jobs/h1000/h10001_20260409_183500/logs/h10001_20260409_183500_phase_editorial.log`
 
 `job.json` y `status.json` mantienen nombre fijo porque son el contrato estable del directorio del job.
 
@@ -150,11 +167,11 @@ id,...,render_targets,default_render_target,content_orientation,target_aspect_ra
 Los campos resueltos se propagan a:
 
 - `data/index.csv`
-- `jobs/<job_id>/job.json`
-- `jobs/<job_id>/status.json`
-- `jobs/<job_id>/source/<job_id>_visual_manifest.json`
-- `jobs/<job_id>/source/<job_id>_scene_prompt_pack.json`
-- `jobs/<job_id>/source/<job_id>_scene_prompt_pack.md`
+- `jobs/<story_bucket>/<job_id>/job.json`
+- `jobs/<story_bucket>/<job_id>/status.json`
+- `jobs/<story_bucket>/<job_id>/source/<job_id>_visual_manifest.json`
+- `jobs/<story_bucket>/<job_id>/source/<job_id>_scene_prompt_pack.json`
+- `jobs/<story_bucket>/<job_id>/source/<job_id>_scene_prompt_pack.md`
 
 ### `index.csv`
 

@@ -11,7 +11,7 @@ sys.path.insert(0, str(PROJECT_DIR))
 
 from config import configure_runtime, get_runtime_paths  # noqa: E402
 from director import update_status  # noqa: E402
-from job_paths import build_job_paths, ensure_job_structure  # noqa: E402
+from job_paths import build_job_paths, ensure_job_structure, iter_job_ids as iter_runtime_job_ids  # noqa: E402
 
 WHISPERX_PYTHON = os.getenv("WHISPERX_PYTHON", "/home/victory/miniconda3/bin/python")
 WHISPER_MODEL = os.getenv("WHISPERX_MODEL", "small")
@@ -40,9 +40,7 @@ def iter_job_ids(job_ids: list[str] | None) -> list[str]:
     runtime = get_runtime_paths()
     if job_ids:
         return job_ids
-    if not runtime.jobs_root.exists():
-        return []
-    return sorted(path.name for path in runtime.jobs_root.iterdir() if path.is_dir())
+    return iter_runtime_job_ids(runtime)
 
 
 def build_cmd(python_bin: str, wav_path: Path, output_dir: Path, device: str, compute_type: str, no_align: bool) -> list[str]:

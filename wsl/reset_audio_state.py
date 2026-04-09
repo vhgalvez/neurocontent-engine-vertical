@@ -9,7 +9,7 @@ sys.path.insert(0, str(PROJECT_DIR))
 
 from config import configure_runtime, get_runtime_paths  # noqa: E402
 from director import update_status  # noqa: E402
-from job_paths import build_job_paths  # noqa: E402
+from job_paths import build_job_paths, iter_job_ids as iter_runtime_job_ids  # noqa: E402
 from voice_registry import initialize_empty_voice_index, load_job_document, save_job_document  # noqa: E402
 
 
@@ -39,9 +39,8 @@ def remove_path(path: Path, *, dry_run: bool) -> bool:
 
 
 def iter_job_ids(jobs_root: Path) -> list[str]:
-    if not jobs_root.exists():
-        return []
-    return sorted(path.name for path in jobs_root.iterdir() if path.is_dir())
+    runtime = get_runtime_paths()
+    return iter_runtime_job_ids(runtime)
 
 
 def clear_generated_state(job_paths, *, dry_run: bool) -> dict[str, int]:

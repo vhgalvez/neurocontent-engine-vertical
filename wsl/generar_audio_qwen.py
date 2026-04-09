@@ -18,7 +18,7 @@ sys.path.insert(0, str(PROJECT_DIR))
 
 from config import configure_runtime, get_runtime_paths  # noqa: E402
 from director import update_status  # noqa: E402
-from job_paths import build_job_paths, ensure_job_structure  # noqa: E402
+from job_paths import build_job_paths, ensure_job_structure, iter_job_ids as iter_runtime_job_ids  # noqa: E402
 from voice_prompting import prepare_voice_design_instruct  # noqa: E402
 from voice_registry import (  # noqa: E402
     assign_voice_to_job,
@@ -191,9 +191,7 @@ def iter_job_ids(job_ids: list[str] | None) -> list[str]:
     runtime = get_runtime_paths()
     if job_ids:
         return job_ids
-    if not runtime.jobs_root.exists():
-        return []
-    return sorted(path.name for path in runtime.jobs_root.iterdir() if path.is_dir())
+    return iter_runtime_job_ids(runtime)
 
 
 def normalize_text(value: str) -> str:

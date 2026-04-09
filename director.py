@@ -370,6 +370,7 @@ def ensure_job_metadata(paths: JobPaths, brief: Dict[str, Any]) -> Dict[str, Any
             "job_id": paths.job_id,
             "job_schema_version": "2.0",
             "story_id": story_id,
+            "story_bucket": paths.story_bucket,
             "story_file": story_file,
             "story_path": story_file,
             "status": document.get("status", "created"),
@@ -386,6 +387,7 @@ def ensure_job_metadata(paths: JobPaths, brief: Dict[str, Any]) -> Dict[str, Any
             "dataset_root": runtime.dataset_root.as_posix(),
             "jobs_root": runtime.jobs_root.as_posix(),
             "paths": {
+                "job_dir": runtime.to_dataset_relative(paths.job_dir),
                 "brief": runtime.to_dataset_relative(paths.brief),
                 "script": runtime.to_dataset_relative(paths.script),
                 "visual_manifest": runtime.to_dataset_relative(paths.manifest),

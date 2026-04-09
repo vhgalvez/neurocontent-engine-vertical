@@ -32,6 +32,7 @@ Separación conceptual:
 
 - `story_id`: identifica la historia fuente
 - `job_id`: identifica una ejecución concreta
+- `story_bucket`: agrupa físicamente jobs de la misma familia
 - `dataset_root`: separa temáticas o proyectos distintos
 
 ## 3. Estructura recomendada del dataset
@@ -261,30 +262,59 @@ Esto permite:
 - mantener trazabilidad por ejecución
 - separar claramente historia fuente y corrida concreta
 
+### 8.3 story_bucket
+
+`story_bucket` no cambia el significado de la historia ni del job.
+
+Solo organiza físicamente los jobs dentro de `jobs/`.
+
+Regla actual:
+
+- si el `story_id` termina en números, el bucket conserva el mismo prefijo y elimina el último dígito numérico
+
+Ejemplos:
+
+- `h10001 -> h1000`
+- `h10002 -> h1000`
+- `h20001 -> h2000`
+
+Ruta final:
+
+```text
+jobs/<story_bucket>/<job_id>/
+```
+
+Ejemplo real:
+
+```text
+jobs/h1000/h10001_20260409_183500/
+```
+
 ## 9. Qué crea el engine al procesar una historia
 
 Cuando procesas una historia, el engine crea una carpeta de job única:
 
 ```text
-jobs/0001_20260409_183500/
+jobs/h1000/h10001_20260409_183500/
 ```
 
 Estructura típica:
 
 ```text
 jobs/
-└── 0001_20260409_183500/
-    ├── job.json
-    ├── status.json
-    ├── source/
-    │   ├── 0001_20260409_183500_brief.json
-    │   ├── 0001_20260409_183500_script.json
-    │   ├── 0001_20260409_183500_visual_manifest.json
-    │   ├── 0001_20260409_183500_scene_prompt_pack.json
-    │   └── 0001_20260409_183500_scene_prompt_pack.md
-    ├── audio/
-    ├── subtitles/
-    └── logs/
+└── h1000/
+    └── h10001_20260409_183500/
+        ├── job.json
+        ├── status.json
+        ├── source/
+        │   ├── h10001_20260409_183500_brief.json
+        │   ├── h10001_20260409_183500_script.json
+        │   ├── h10001_20260409_183500_visual_manifest.json
+        │   ├── h10001_20260409_183500_scene_prompt_pack.json
+        │   └── h10001_20260409_183500_scene_prompt_pack.md
+        ├── audio/
+        ├── subtitles/
+        └── logs/
 ```
 
 ## 10. Qué guarda `job.json`
@@ -295,6 +325,7 @@ Campos importantes:
 
 - `job_id`
 - `story_id`
+- `story_bucket`
 - `story_file`
 - `story_path`
 - `created_at`
@@ -413,7 +444,13 @@ Get-ChildItem "$DATASET\jobs"
 Deberías ver algo como:
 
 ```text
-0001_20260409_183500
+h1000
+```
+
+Y dentro del bucket:
+
+```text
+h10001_20260409_183500
 ```
 
 ### Paso 8. Verificar archivado
@@ -624,11 +661,11 @@ bash wsl/run_audio.sh --job-id 0001_20260409_183500
 
 Qué espera el sistema:
 
-- `jobs/<job_id>/source/<job_id>_script.json`
+- `jobs/<story_bucket>/<job_id>/source/<job_id>_script.json`
 
 Qué genera:
 
-- `jobs/<job_id>/audio/<job_id>_narration.wav`
+- `jobs/<story_bucket>/<job_id>/audio/<job_id>_narration.wav`
 
 ## 29. Subtítulos: cómo se usan después del audio
 
@@ -640,11 +677,11 @@ bash wsl/run_subs.sh --job-id 0001_20260409_183500
 
 Qué espera el sistema:
 
-- `jobs/<job_id>/audio/<job_id>_narration.wav`
+- `jobs/<story_bucket>/<job_id>/audio/<job_id>_narration.wav`
 
 Qué genera:
 
-- `jobs/<job_id>/subtitles/<job_id>_narration.srt`
+- `jobs/<story_bucket>/<job_id>/subtitles/<job_id>_narration.srt`
 
 ## 30. Verificación rápida de audio y subtítulos
 

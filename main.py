@@ -264,6 +264,25 @@ def load_markdown_briefs(args: argparse.Namespace, runtime) -> List[Dict[str, An
     return load_all_stories(stories_dir)
 
 
+def validate_requested_story_ids(
+    all_briefs: List[Dict[str, Any]],
+    selected_story_ids: set[str],
+) -> None:
+    if not selected_story_ids:
+        return
+
+    available_story_ids = {
+        pad_story_id(brief.get("metadata", {}).get("id", brief.get("id")))
+        for brief in all_briefs
+    }
+    missing_story_ids = sorted(selected_story_ids - available_story_ids)
+    if missing_story_ids:
+        raise FileNotFoundError(
+            "No existe la historia solicitada en stories/production: "
+            f"{', '.join(missing_story_ids)}"
+        )
+
+
 def select_pending_markdown_briefs(
     all_briefs: List[Dict[str, Any]],
     selected_story_ids: set[str],
@@ -397,6 +416,8 @@ def main() -> None:
         pad_story_id(story_id)
         for story_id in [*(args.story_ids or []), *(args.job_ids or [])]
     }
+    if args.source == "markdown":
+        validate_requested_story_ids(all_briefs, selected_story_ids)
     briefs = (
         select_pending_markdown_briefs(all_briefs, selected_story_ids)
         if args.source == "markdown"

@@ -44,14 +44,22 @@ python main.py --dry-run
 python main.py --story-id h10001
 ```
 
+El primer comando valida el dataset y muestra qué historias procesaría. El segundo ejecuta el pipeline editorial para una historia concreta y genera un `job_id` nuevo.
+
 Si vas a usar audio en WSL:
 
 ```bash
 conda activate qwen_gpu
-bash wsl/run_design_voice.sh --scope global --voice-name marca_personal_es --description "Voz sobria y profesional." --reference-text "Hola, esta es la voz oficial de la marca."
+bash wsl/run_design_voice.sh \
+  --scope global \
+  --voice-name marca_personal_es \
+  --description "Voz sobria y profesional." \
+  --reference-text "Hola, esta es la voz oficial de la marca."
 bash wsl/run_audio.sh --job-id h10001_20260409_040719 --voice-name marca_personal_es --overwrite
 bash wsl/run_subs.sh --job-id h10001_20260409_040719
 ```
+
+Sustituye `h10001_20260409_040719` por el `job_id` real que te devuelva `main.py`.
 
 ## Mapa documental
 
@@ -63,7 +71,7 @@ bash wsl/run_subs.sh --job-id h10001_20260409_040719
 
 ## Comandos básicos
 
-Pipeline editorial:
+### Pipeline editorial
 
 ```bash
 python main.py
@@ -74,24 +82,30 @@ python main.py --target-audio-minutes 2
 python main.py --text-model qwen2.5:7b
 ```
 
-Reset completo del dataset editorial:
+Usa `--source csv` solo cuando necesites compatibilidad con el flujo legacy. En operación normal, el pipeline debe documentarse y usarse pensando en `stories/production/`.
+
+### Reset completo del dataset editorial
 
 ```bash
 python reset_dataset.py --dataset-root /mnt/c/ruta/a/video-dataset --dry-run
 python reset_dataset.py --dataset-root /mnt/c/ruta/a/video-dataset --yes
 ```
 
-Audio y voces:
+### Audio y voces
 
 ```bash
-bash wsl/run_design_voice.sh --scope global --voice-name marca_personal_es --description "Voz sobria y profesional." --reference-text "Hola, esta es la voz oficial de la marca."
+bash wsl/run_design_voice.sh \
+  --scope global \
+  --voice-name marca_personal_es \
+  --description "Voz sobria y profesional." \
+  --reference-text "Hola, esta es la voz oficial de la marca."
 bash wsl/run_audio.sh --job-id h10001_20260409_040719 --voice-id voice_global_0001 --overwrite
 bash wsl/run_generate_audio_from_prompt.sh --voice-name marca_personal_es --text "Prueba rápida de voz persistida."
 bash wsl/run_promote_voice_to_clone.sh --voice-name marca_personal_es --overwrite
 bash wsl/run_delete_voice.sh --voice-id voice_global_0001
 ```
 
-Subtítulos:
+### Subtítulos
 
 ```bash
 bash wsl/run_subs.sh --job-id h10001_20260409_040719

@@ -29,6 +29,8 @@ La salida normal es:
 jobs/<story_bucket>/<job_id>/subtitles/<job_id>_narration.srt
 ```
 
+Ese contrato hace que subtítulos sea un módulo estrictamente dependiente de audio: no genera texto, no corrige guion y no reconstruye artefactos editoriales.
+
 ## Flujo paso a paso
 
 1. `run_subs.sh` resuelve `WHISPERX_PYTHON`, `VIDEO_DATASET_ROOT` y `VIDEO_JOBS_ROOT`.
@@ -40,6 +42,8 @@ jobs/<story_bucket>/<job_id>/subtitles/<job_id>_narration.srt
 7. Actualiza `status.json` con `subtitles_generated` y `last_step`.
 
 ## Comandos reales
+
+### Casos de uso habituales
 
 Generar subtítulos para un job:
 
@@ -65,6 +69,8 @@ Usar otro Python de WhisperX:
 export WHISPERX_PYTHON="/home/victory/miniconda3/envs/whisperx/bin/python"
 bash wsl/run_subs.sh --job-id h10001_20260409_040719
 ```
+
+Usa `bash wsl/run_subs.sh` sin `--job-id` solo cuando quieras recorrer todos los jobs detectados. Para operación diaria suele ser más claro procesar jobs explícitos.
 
 ## Variables y comportamiento
 

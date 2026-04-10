@@ -36,6 +36,8 @@ export QWEN_PYTHON="${QWEN_PYTHON:-/home/victory/miniconda3/envs/qwen_gpu/bin/py
 
 Ese fallback es importante porque audio y diseño de voz comparten runtime. Si `QWEN_PYTHON` apunta a otro entorno, el wrapper falla antes de sintetizar.
 
+Cuando la documentación hable de audio operativo, debe asumir siempre el uso de estos wrappers. Invocar directamente los scripts Python tiene sentido solo para diagnóstico o desarrollo muy controlado.
+
 ## Registry de voces
 
 La fuente de verdad de las voces es:
@@ -98,6 +100,8 @@ Y deja trazabilidad en `job.json`, `status.json` y logs del job.
 
 ## Comandos reales
 
+### Alta y diseño de voces
+
 Alta de una voz global reutilizable:
 
 ```bash
@@ -131,6 +135,8 @@ bash wsl/run_design_voice.sh \
   --verbose-voice-debug
 ```
 
+### Generación de audio por job
+
 Generar audio para un job concreto:
 
 ```bash
@@ -154,6 +160,8 @@ bash wsl/run_audio.sh \
   --voice-name marca_personal_es \
   --overwrite
 ```
+
+### Generación puntual y reutilización de voces
 
 Generar audio directo sin job usando una voz registrada por nombre:
 
@@ -182,6 +190,8 @@ bash wsl/run_generate_audio_from_prompt.sh \
   --save-prompt \
   --output /mnt/c/ruta/a/outputs/locutor_clone_es.wav
 ```
+
+### Evolución y mantenimiento del registry
 
 Promocionar una voz `design_only` a `clone_prompt`:
 
@@ -237,3 +247,31 @@ Una voz `design_only` no es una clonación acústica fuerte. Reutiliza identidad
 Si el wrapper falla con `ERROR: no existe Python ejecutable`, corrige `QWEN_PYTHON`. Si falla diciendo que no existe un `voice_id` o `voice_name`, revisa `voices_index.json` y que estés apuntando al dataset correcto. Si el borrado de una voz se bloquea, normalmente es porque sigue referenciada en `job.voice.voice_id` o en `job.audio_synthesis.voice_id`.
 
 Si dudas entre `voice-id` y `voice-name`, usa `voice-id` como clave técnica y `voice-name` como alias de operación humana. No borres carpetas a mano dentro de `voices/`; eso rompe la consistencia del registry que luego valida `voice_registry.py`.
+
+
+## Contexto técnico de Qwen TTS web demo
+
+```bash
+qwen-tts-demo Qwen/Qwen3-TTS-12Hz-1.7B-Base --ip 0.0.0.0 --port 8000
+```
+
+- Comando realista para tu entorno ahora mismo:
+
+```bash
+/home/victory/miniconda3/envs/qwen_gpu/bin/qwen-tts-demo \
+Qwen/Qwen3-TTS-12Hz-1.7B-Base \
+--device cuda:0 \
+--dtype float16 \
+--no-flash-attn \
+--ip 0.0.0.0 \
+--port 8000
+```
+
+```bash
+victory@DESKTOP-1O5BMFF:/$ ls -l /mnt/d/AI_Models/huggingface/hub/
+total 0
+drwxrwxrwx 1 victory victory 4096 Mar 24 21:38 models--Qwen--Qwen3-TTS-12Hz-0.6B-Base
+drwxrwxrwx 1 victory victory 4096 Mar 24 22:23 models--Qwen--Qwen3-TTS-12Hz-1.7B-Base
+drwxrwxrwx 1 victory victory 4096 Mar 24 21:36 models--Qwen--Qwen3-TTS-12Hz-1.7B-CustomVoice
+drwxrwxrwx 1 victory victory 4096 Mar 24 21:27 models--Qwen--Qwen3-TTS-12Hz-1.7B-VoiceDesign
+```

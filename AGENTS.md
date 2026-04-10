@@ -1,5 +1,7 @@
 # AGENTS.md
 
+Guía breve para agentes y asistentes que trabajen sobre este repositorio. No sustituye al `README.md` ni a la documentación modular de `doc/`.
+
 ## Arquitectura rápida
 
 - `main.py`: entrypoint editorial.
@@ -37,6 +39,8 @@ bash wsl/run_audio.sh --job-id h10001_20260409_040719 --overwrite
 bash wsl/run_subs.sh --job-id h10001_20260409_040719
 bash wsl/run_reset_audio_state.sh --scope generated --dry-run
 ```
+
+Usa estos comandos como referencia rápida. Los flujos funcionales y su contexto viven en `doc/text_pipeline.md`, `doc/audio_pipeline.md`, `doc/subtitles_pipeline.md` y `doc/operations.md`.
 
 ## Seguridad de cambios
 

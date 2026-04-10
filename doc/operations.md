@@ -4,6 +4,8 @@
 
 Este documento reúne la operación end-to-end del repositorio sin duplicar la referencia técnica de cada módulo. Sirve para ejecutar el sistema completo, validar resultados, resetear estado y saber en qué orden tocar cada parte.
 
+Para detalles de contrato o CLI de un módulo concreto, usa este documento como mapa operativo y luego baja al documento específico de texto, audio o subtítulos.
+
 ## Mapa operativo
 
 La secuencia normal es: historia fuente, pipeline editorial, voz, audio, subtítulos. El resultado de cada fase alimenta la siguiente, y el estado se refleja en `job.json`, `status.json` y los artefactos físicos del dataset.
@@ -75,7 +77,11 @@ bash wsl/run_audio.sh --job-id h10001_20260409_040719 --voice-name marca_persona
 bash wsl/run_subs.sh --job-id h10001_20260409_040719
 ```
 
+En los ejemplos, `h10001_20260409_040719` es solo un placeholder representativo. Sustitúyelo siempre por el `job_id` real generado en tu ejecución.
+
 ## Secuencias operativas útiles
+
+### Editorial
 
 Procesar todo lo pendiente en editorial:
 
@@ -88,6 +94,8 @@ Probar una sola historia con otra duración objetivo:
 ```bash
 python main.py --story-id h10001 --target-audio-minutes 2
 ```
+
+### Audio y voz
 
 Usar una voz global por defecto:
 

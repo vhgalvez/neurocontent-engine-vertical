@@ -90,6 +90,8 @@ Solo se procesan historias con `estado: pending`. Cuando una historia Markdown t
 7. Se actualizan `job.json`, `status.json` e `index.csv`.
 8. Si el source fue Markdown y no hubo error, la historia fuente se archiva.
 
+En otras palabras: el contrato de entrada editorial es la historia Markdown; el contrato de salida editorial es la carpeta del `job` con artefactos estructurados y estado sincronizado.
+
 ## Estructura de salida
 
 Cada ejecución se escribe dentro del dataset externo:
@@ -114,6 +116,8 @@ jobs/<story_bucket>/<job_id>/
 
 ## Comandos reales
 
+### Casos básicos
+
 Procesar todas las historias pendientes:
 
 ```bash
@@ -137,6 +141,8 @@ Procesar varias historias:
 ```bash
 python main.py --story-id h10001 --story-id h10002
 ```
+
+### Overrides de ejecución
 
 Usar un directorio alternativo de historias activas:
 
@@ -182,7 +188,9 @@ La duración objetivo solo orienta el texto. No cambia por sí sola la lógica d
 
 ## Contratos con otros módulos
 
-El módulo editorial entrega al módulo de audio dos piezas críticas: `script.json` y `job.json`. Audio usa esos artefactos para decidir qué texto sintetizar, dónde escribir el `.wav` y qué voz resolver. El módulo de subtítulos, a su vez, depende de que el audio ya exista en `audio/<job_id>_narration.wav` o en una ruta legacy compatible.
+El módulo editorial entrega al módulo de audio dos piezas críticas: `script.json` y `job.json`. Audio usa esos artefactos para decidir qué texto sintetizar, dónde escribir el `.wav` y qué voz resolver.
+
+El módulo de subtítulos depende a su vez de que el audio ya exista en `audio/<job_id>_narration.wav` o en una ruta legacy compatible. Por eso el orden correcto es editorial -> audio -> subtítulos.
 
 ## Notas importantes
 

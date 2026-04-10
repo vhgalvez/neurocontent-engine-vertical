@@ -1,0 +1,46 @@
+===========================================================================================
+      INFORME DETALLADO DE SISTEMA Y HARDWARE: DESKTOP-1O5BMFF
+      Fecha: 11/04/2026 00:22:34
+===========================================================================================
+
+[1] INFORMACION DEL SISTEMA OPERATIVO
+
+OS Version Instalacion UltimoArranque
+-- ------- ----------- --------------
+[2] PLACA BASE Y BIOS
+
+Fabricante                    Producto            VersionBIOS FechaBIOS
+----------                    --------            ----------- ---------
+Gigabyte Technology Co., Ltd. B550 AORUS ELITE V2 FCc         08/02/2023
+[3] PROCESADOR
+
+Name                                            NumberOfCores NumberOfLogicalProcessors MaxSpeed(MHz)
+----                                            ------------- ------------------------- -------------
+AMD Ryzen 7 5700X 8-Core Processor                          8                        16          3401
+[4] MEMORIA RAM (Total: 31.92 GB)
+
+BankLabel    Capacidad(GB) Velocidad(MT/s) PartNumber
+---------    ------------- --------------- ----------
+P0 CHANNEL A            16            3200 CMK32GX4M2E3200C16  
+P0 CHANNEL B            16            3200 CMK32GX4M2E3200C16
+[5] TARJETA GRAFICA
+
+Name                    Driver_Version Resolucion
+----                    -------------- ----------
+NVIDIA GeForce RTX 4070 32.0.15.9579   1920x1080
+[6] UNIDADES DE DISCO
+
+Model               Tamano(GB) MediaType             InterfaceType
+-----               ---------- ---------             -------------
+KINGSTON SNV2S1000G     931,51 Fixed hard disk media SCSI
+ST2000DM008-2UB102     1863,01 Fixed hard disk media IDE
+[7] RED (CONEXIONES ACTIVAS)
+
+Name       InterfaceDescription                    LinkSpeed
+----       --------------------                    ---------
+Ethernet   Realtek Gaming 2.5GbE Family Controller 1 Gbps
+Ethernet 3 VirtualBox Host-Only Ethernet Adapter   1 Gbps
+
+===========================================================================================
+      INFORME FINALIZADO - Archivo: C:\Users\vhgal\Documents\desarrollo\ia\AI-video-automation\neurocontent-engine-vertical\Informe_Hardware_Completo.txt
+===========================================================================================

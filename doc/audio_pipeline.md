@@ -257,6 +257,11 @@ qwen-tts-demo Qwen/Qwen3-TTS-12Hz-1.7B-Base --ip 0.0.0.0 --port 8000
 
 - Comando realista para tu entorno ahora mismo:
 
+export HF_HOME=/mnt/d/AI_Models/huggingface
+export HF_HUB_CACHE=/mnt/d/AI_Models/huggingface/hub
+
+env | grep -E 'HF_|TRANSFORMERS|HUGGINGFACE'
+
 ```bash
 /home/victory/miniconda3/envs/qwen_gpu/bin/qwen-tts-demo \
 Qwen/Qwen3-TTS-12Hz-1.7B-Base \
@@ -266,6 +271,33 @@ Qwen/Qwen3-TTS-12Hz-1.7B-Base \
 --ip 0.0.0.0 \
 --port 8000
 ```
+
+
+clonar voz personalizada:
+
+```bash
+/home/victory/miniconda3/envs/qwen_gpu/bin/qwen-tts-demo \
+Qwen/Qwen3-TTS-12Hz-1.7B-Base \
+--device cuda:0 \
+--dtype float16 \
+--no-flash-attn \
+--ip 0.0.0.0 \
+--port 8000
+```
+
+crear voz personalizada desde referencia:
+
+```bash
+/home/victory/miniconda3/envs/qwen_gpu/bin/qwen-tts-demo \
+Qwen/Qwen3-TTS-12Hz-1.7B-VoiceDesign \
+--device cuda:0 \
+--dtype float16 \
+--no-flash-attn \
+--ip 0.0.0.0 \
+--port 8000
+```
+
+
 
 ```bash
 victory@DESKTOP-1O5BMFF:/$ ls -l /mnt/d/AI_Models/huggingface/hub/

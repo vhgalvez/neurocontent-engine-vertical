@@ -273,7 +273,7 @@ Qwen/Qwen3-TTS-12Hz-1.7B-Base \
 ```
 
 
-clonar voz personalizada:
+- clonar voz personalizada:
 
 ```bash
 /home/victory/miniconda3/envs/qwen_gpu/bin/qwen-tts-demo \
@@ -285,13 +285,53 @@ Qwen/Qwen3-TTS-12Hz-1.7B-Base \
 --port 8000
 ```
 
-crear voz personalizada desde referencia:
+- crear voz personalizada desde referencia:
 
 ```bash
 /home/victory/miniconda3/envs/qwen_gpu/bin/qwen-tts-demo \
 Qwen/Qwen3-TTS-12Hz-1.7B-VoiceDesign \
 --device cuda:0 \
 --dtype float16 \
+--no-flash-attn \
+--ip 0.0.0.0 \
+--port 8000
+```
+
+
+- modelos ligeros para pruebas rápidas:
+
+```bash
+/home/victory/miniconda3/envs/qwen_gpu/bin/qwen-tts-demo \
+Qwen/Qwen3-TTS-12Hz-0.6B-Base \
+--device cuda:0 \
+--dtype float16 \
+--no-flash-attn \
+--ip 0.0.0.0 \
+--port 8000
+```
+
+
+
+```bash
+
+/home/victory/miniconda3/envs/qwen_gpu/bin/qwen-tts-demo \
+Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice \
+--device cuda:0 \
+--dtype bfloat16 \
+--no-flash-attn \
+--ip 0.0.0.0 \
+--port 8000
+```
+
+
+
+- modelos de generación de voz de alta calidad 
+
+```bash
+/home/victory/miniconda3/envs/qwen_gpu/bin/qwen-tts-demo \
+Qwen/Qwen3-TTS-12Hz-1.7B-Base \
+--device cuda:0 \
+--dtype bfloat16 \
 --no-flash-attn \
 --ip 0.0.0.0 \
 --port 8000
